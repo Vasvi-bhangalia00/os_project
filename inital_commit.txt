@@ -1,0 +1,65 @@
+#include<stdio.h>
+#include<stdlib.h>
+int processes[100][3], NP, quantum, scheduler[1000],WT[100];
+unsigned int time = 0;
+typedef struct el
+{
+	unsigned int p;
+	struct el * next;
+}Q;
+Q * queue = NULL;
+void getSystem()
+{
+	int i;
+	printf("\nNumber of processes: ");
+	scanf("%d", &NP);
+
+	printf("\nThe Quantum: ");
+	scanf("%d", &quantum);
+
+	for(i=0; i<NP; i++ )
+	{
+		printf("\n Arrival Time of p%d: ", i);
+		scanf("%d", &processes[i][0]);
+		printf("\n Burst time for p%d: ", i);
+		scanf("%d", &processes[i][1]);
+		processes[i][2] = processes[i][1];
+		printf("\n-----------");
+	}
+}
+void printSystem()
+{
+	int i;
+	printf("\n\t\tOur System is :");
+	printf("\nQuantum: %d",quantum);
+	printf("\nPi:  Arrival Time  Burst Time Remaining Time");
+	for(i=0; i<NP; i++)
+	{
+		printf("\nP%d:  %d  %d  %d", i, processes[i][0], processes[i][1], processes[i][2]);
+	}
+	printf("\nThe queue: ");
+	Q *n;
+	for(n=queue; n!=NULL; n=n->next)
+	{
+		printf("P%d ",n->p);
+	}
+}
+unsigned int executionRemained()
+{
+	int i;
+	unsigned int x = 0;
+	for(i=0; i<NP; i++)
+	{
+		if(processes[i][2] > 0)
+		{
+			x = 1;
+		}
+	}
+	return x;
+}
+main()
+{
+	getSystem();
+	printSystem();
+
+}
