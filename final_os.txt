@@ -1,0 +1,235 @@
+#include<stdio.h>
+#include<stdlib.h>
+//structure for queue
+typedef struct exect
+{
+	 unsigned int p;
+	struct exect * next;
+}Q;
+Q * queue = NULL;
+//declaration of arrays and global variables
+int at[100],bt[100],rt[100],N, quantum, scheduler[1000],waitingTime[100];
+int time = 0;
+//function to get process details
+void getData()
+{
+    new_number:
+	printf("\nEnter the number of processes: ");
+	scanf("%d", &N);
+	if(N<=0)
+    {
+        printf("Enter the correct Number of processes(>0)\n");
+        goto new_number;
+    }
+    new_quantum:
+	printf("\nEnter the Time Quantum: ");
+	scanf("%d", &quantum);
+	if(quantum<=0)
+    {
+        printf("Enter the correct quantum(>0)\n");
+        goto new_quantum;
+    }
+	int i;
+	    for( i=0; i<N; i++ )
+	  {
+
+
+        new_arrival_time:
+        printf("\n Enter the Arrival Time of P%d: ", i);
+		scanf("%d", &at[i]);
+        if(at[i]<0)
+            {
+                printf("Enter the correct arrival Time(>=0)\n");
+                goto new_arrival_time;
+
+		    }
+
+		new_burst_time:
+        printf("\nEnter the Burst time for P%d: ", i);
+		scanf("%d", &bt[i]);
+
+		    if(bt[i]<0)
+            {
+                printf("Enter the correct burst Time(>=0)\n");
+                goto new_burst_time;
+
+		    }
+		   rt[i]=bt[i];
+		printf("\n-----------\n\n");
+	}
+}
+//function to print table and queue
+void printTable()
+{
+	printf("\n-------------");
+	printf("\nThe table is:");
+	printf("\n-------------\n");
+	printf("\n[Time Quantum: %d]",quantum);
+	printf("\nProcess Id      Arrival Time    Burst Time    Remaining Time");
+	int i;
+	for( i=0; i<N; i++)
+	{
+		printf("\nP%d:\t\t %d\t\t  %d\t\t  %d", i, at[i], bt[i], rt[i]);
+	}
+	printf("\n\nThe queue is :{ ");
+	Q *n;
+	for(n=queue; n!=NULL; n=n->next)
+	{
+		printf("P%d ",n->p);
+	}
+	printf(" }\n");
+}
+//to check the execuion status of a process
+ unsigned int executionRemained()
+{
+	int i;
+	 unsigned int flag = 0;
+	for( i=0; i<N; i++)
+	{
+		if(rt[i] > 0)
+		{
+			flag = 1;
+		}
+	}
+	return flag;
+}
+void addToQueue(int i)
+{
+	Q *n, *n1;
+	//memory allocation done so as to remove executing process out of queue and add preempted process back to queue
+
+	n = (Q *)malloc(sizeof(Q));
+	n->next = NULL;
+	n->p = i;
+	if(queue == NULL)
+	{
+
+		queue = n;
+	}
+	else
+	{
+		for(n1 = queue ; n1->next!=NULL; n1=n1->next);
+		n1 -> next = n;
+	}
+}
+//adding new process to queue
+void addArrivedProcessesToQueue()
+{
+	int i;
+	for(i=0; i<N; i++)
+	{
+		if(at[i] == time)
+		{
+			addToQueue(i);
+		}
+	}
+}
+//getting next process from queue
+ int getNextProcess()
+{
+	Q *n;
+	int x;
+	if(queue == NULL)
+	{
+		return -1;
+	}
+	else
+	{
+		x = queue -> p;
+		n = queue;
+		queue = queue -> next;
+		free(n);
+		return x;
+	}
+}
+void schedule()
+{
+	int np, toRun, q, i;
+	q = 0;
+	addArrivedProcessesToQueue();
+	while(executionRemained())
+	{
+		np = getNextProcess();
+		if(np == -1)
+		{
+			/*
+			here if there is no process in waiting queue
+			which mean the process gets IDLE state.
+			here in this program we put -1 in scheduler[time]
+			which mean that the processor get IDLE in this time.
+			*/
+			scheduler[time] = -1;
+			time++;
+			addArrivedProcessesToQueue();
+		}
+		else
+		{
+			q = quantum;
+			if(rt[np] < q)
+			{
+				q = rt[np];
+			}
+			for(i = q; i>0; i--)
+			{
+				scheduler[time]=np;
+				time++;
+				rt[np]--;
+				addArrivedProcessesToQueue();
+			}
+			if(rt[np] > 0)
+			{
+				addToQueue(np);
+			}
+		}
+
+
+		printTable();
+
+
+	}
+}
+//shows the sequence of processes
+void printScheduling()
+{
+	int i;
+	printf("\n\nScheduling: \n");
+	for(i=0; i<time; i++)
+	{
+		printf("[%d-%d] (P%d) \n",i,i+1 ,scheduler[i]);
+	}
+	printf("\n\nWaiting Time: \n");
+	for(i=0; i<N; i++)
+	{
+		printf("\nP%d: %d", i, waitingTime[i]);
+	}
+	//counting Average Waiting Time...
+	float AvgT = 0.0;
+	for(i=0; i<N; i++)
+	{
+		AvgT = AvgT+waitingTime[i];
+	}
+	AvgT = AvgT/N;
+	printf("\n\n The Average Waiting Time is : %f", AvgT);
+
+}
+void WatingTime()
+{
+	 int releaseTime, t;
+	int i;
+	for( i=0; i<N; i++)
+	{
+
+		for(t=time-1; scheduler[t]!= i; t--);
+		releaseTime = t+1;
+		waitingTime[i] = releaseTime - at[i] - bt[i];
+	}
+}
+
+main()
+{
+	getData();
+	printTable();
+	schedule();
+	WatingTime();
+	printScheduling();
+}
